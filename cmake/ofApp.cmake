@@ -58,17 +58,13 @@ function(ofApp APP_PATH) # addons
   foreach(addon ${addons})
     ofAddon(${app_name} ${addon})
   endforeach()
-  copy_of_dlls(${app_name})
   set_target_properties(${app_name}
     PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${APP_DIR}/bin"
-    LIBRARY_OUTPUT_DIRECTORY_DEBUG "${APP_DIR}/bin"
     RUNTIME_OUTPUT_DIRECTORY_DEBUG "${APP_DIR}/bin"
-
-    ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${APP_DIR}/bin"
-    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${APP_DIR}/bin"
     RUNTIME_OUTPUT_DIRECTORY_RELEASE "${APP_DIR}/bin"
   )
+  copy_of_dlls(${app_name})
+
   target_link_libraries(${app_name} general openFrameworksLib)
   target_include_directories(${app_name} PUBLIC ${APP_DIR}/src)
   set_target_properties(${app_name} PROPERTIES OUTPUT_NAME_DEBUG ${app_name}_debug)
