@@ -295,9 +295,11 @@ target_link_libraries(openFrameworksLib
   optimized pugixml.lib ${OF_STATIC_LIBS}
 )
 
+set(OF_LIB_DIRS_PARENT ${OF_LIB_DIRS} PARENT_SCOPE)
+
 include(cmake/helpers.cmake)
 macro (copy_of_dlls target)
-  foreach(libdir ${OF_LIB_DIRS})
+  foreach(libdir ${OF_LIB_DIRS_PARENT})
     install_dlls(${target} ${libdir} dll)
   endforeach()
 endmacro()

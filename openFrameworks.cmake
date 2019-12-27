@@ -10,7 +10,7 @@ if (NOT OF_ROOT)
   endif()
 endif()
 
-set(OF_CMAKE_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+set(OF_CMAKE_ROOT ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
 
 include(cmake/openFrameworksLib.cmake)
 include(cmake/ofAddon.cmake)
