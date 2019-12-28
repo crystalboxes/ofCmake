@@ -1,5 +1,9 @@
+if (MSVC)
+  set(CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /wd4267 /wd4996 /wd4477 /wd4101 /wd4996")
+  set(CMAKE_CXX_FLAGS ${CXX_FLAGS} PARENT_SCOPE)
+  set(CMAKE_CXX_FLAGS ${CXX_FLAGS})
+endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /wd4267 /wd4996 /wd4477 /wd4101 /wd4996")
 set(OF_SOURCES 
   ${OF_ROOT}/libs/openFrameworks/3d/of3dPrimitives.h
   ${OF_ROOT}/libs/openFrameworks/3d/of3dUtils.h
