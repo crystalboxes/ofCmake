@@ -37,6 +37,7 @@ function(ofApp APP_PATH) # addons
   if (NOT EXISTS ${APP_DIR}/bin/data)
     file(MAKE_DIRECTORY ${APP_DIR}/bin/data)
     file(WRITE ${APP_DIR}/bin/data/.gitkeep "")
+    file(WRITE ${APP_DIR}/.gitignore "bin/*\n!bin/data*")
     endif()
 
   if (NOT EXISTS ${APP_DIR}/src)
