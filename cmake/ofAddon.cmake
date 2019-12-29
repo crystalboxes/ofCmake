@@ -1,7 +1,12 @@
 include(cmake/helpers.cmake)
 
 function(load_addon_libs target libs LOOKUP_DIR)
-  install_dlls(${target} ${LOOKUP_DIR} dll)
+  if (WIN32)
+    set(dll_ext dll)
+  elseif(APPLE)
+    set(dll_ext dylib)
+  endif()
+  install_dlls(${target} ${LOOKUP_DIR} ${dll_ext})
   file(GLOB libs_ ${LOOKUP_DIR}/*.lib)
   set(${libs} ${libs_} PARENT_SCOPE)
 endfunction()

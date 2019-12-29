@@ -1,7 +1,62 @@
 if (MSVC)
   set(CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /wd4267 /wd4996 /wd4477 /wd4101 /wd4996")
-  set(CMAKE_CXX_FLAGS ${CXX_FLAGS} PARENT_SCOPE)
+  if (has_parent_scope)
+    set(CMAKE_CXX_FLAGS ${CXX_FLAGS} PARENT_SCOPE)
+  endif()
   set(CMAKE_CXX_FLAGS ${CXX_FLAGS})
+elseif(APPLE)
+  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
+
+set(of_video_src
+  ${OF_ROOT}/libs/openFrameworks/video/ofVideoGrabber.h
+  ${OF_ROOT}/libs/openFrameworks/video/ofVideoGrabber.cpp
+  ${OF_ROOT}/libs/openFrameworks/video/ofVideoPlayer.h
+  ${OF_ROOT}/libs/openFrameworks/video/ofVideoPlayer.cpp
+  ${OF_ROOT}/libs/openFrameworks/video/ofVideoBaseTypes.h
+)
+
+if (WIN32)
+  set(of_video_src
+    ${of_video_src}
+    ${OF_ROOT}/libs/openFrameworks/video/ofDirectShowGrabber.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofDirectShowPlayer.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofDirectShowGrabber.cpp
+    ${OF_ROOT}/libs/openFrameworks/video/ofDirectShowPlayer.cpp
+  )
+elseif(APPLE)
+  set(of_video_src 
+    ${of_video_src}
+    ${OF_ROOT}/libs/openFrameworks/video/ofAVFoundationGrabber.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofAVFoundationGrabber.mm
+    ${OF_ROOT}/libs/openFrameworks/video/ofAVFoundationPlayer.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofAVFoundationPlayer.mm
+    ${OF_ROOT}/libs/openFrameworks/video/ofAVFoundationVideoPlayer.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofAVFoundationVideoPlayer.m
+    ${OF_ROOT}/libs/openFrameworks/video/ofQTKitGrabber.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofQTKitGrabber.mm
+    ${OF_ROOT}/libs/openFrameworks/video/ofQTKitMovieRenderer.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofQTKitMovieRenderer.m
+    ${OF_ROOT}/libs/openFrameworks/video/ofQTKitPlayer.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofQTKitPlayer.mm
+    ${OF_ROOT}/libs/openFrameworks/video/ofQtUtils.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofQtUtils.cpp
+    ${OF_ROOT}/libs/openFrameworks/video/ofQuickTimeGrabber.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofQuickTimeGrabber.cpp
+    ${OF_ROOT}/libs/openFrameworks/video/ofQuickTimePlayer.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofQuickTimePlayer.cpp
+  )
+else()
+  set(of_video_src
+    ${of_video_src}
+    ${OF_ROOT}/libs/openFrameworks/video/ofGstVideoPlayer.cpp
+    ${OF_ROOT}/libs/openFrameworks/video/ofGstUtils.cpp
+    ${OF_ROOT}/libs/openFrameworks/video/ofGstVideoPlayer.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofGstVideoGrabber.cpp
+    ${OF_ROOT}/libs/openFrameworks/video/ofGstUtils.h
+    ${OF_ROOT}/libs/openFrameworks/video/ofGstVideoGrabber.h
+  )
 endif()
 
 set(OF_SOURCES 
@@ -90,11 +145,7 @@ set(OF_SOURCES
   ${OF_ROOT}/libs/openFrameworks/utils/ofUtils.h
   ${OF_ROOT}/libs/openFrameworks/utils/ofXml.h
 
-  ${OF_ROOT}/libs/openFrameworks/video/ofDirectShowGrabber.h
-  ${OF_ROOT}/libs/openFrameworks/video/ofDirectShowPlayer.h
-  ${OF_ROOT}/libs/openFrameworks/video/ofVideoBaseTypes.h
-  ${OF_ROOT}/libs/openFrameworks/video/ofVideoGrabber.h
-  ${OF_ROOT}/libs/openFrameworks/video/ofVideoPlayer.h
+  ${of_video_src}
 
   ${OF_ROOT}/libs/openFrameworks/communication/ofArduino.h
   ${OF_ROOT}/libs/openFrameworks/communication/ofSerial.h
@@ -171,14 +222,14 @@ set(OF_SOURCES
   ${OF_ROOT}/libs/openFrameworks/utils/ofUtils.cpp
   ${OF_ROOT}/libs/openFrameworks/utils/ofXml.cpp
 
-  ${OF_ROOT}/libs/openFrameworks/video/ofDirectShowGrabber.cpp
-  ${OF_ROOT}/libs/openFrameworks/video/ofDirectShowPlayer.cpp
-  ${OF_ROOT}/libs/openFrameworks/video/ofVideoGrabber.cpp
-  ${OF_ROOT}/libs/openFrameworks/video/ofVideoPlayer.cpp
 
   ${OF_ROOT}/libs/openFrameworks/communication/ofArduino.cpp
   ${OF_ROOT}/libs/openFrameworks/communication/ofSerial.cpp  
 )
+
+if (APPLE)
+  set_source_files_properties(${OF_SOURCES} PROPERTIES COMPILE_FLAGS "-x objective-c++")
+endif()
 
 add_library(openFrameworksLib STATIC ${OF_SOURCES})
 set_target_properties(openFrameworksLib PROPERTIES LINKER_LANGUAGE CXX)
@@ -221,89 +272,152 @@ target_include_directories(openFrameworksLib PUBLIC
   ${OF_ROOT}/addons
 )
 
-target_compile_definitions(openFrameworksLib PUBLIC
-  WIN32
+set(compile_defs
   CURL_STATICLIB
   _CONSOLE
   POCO_STATIC
-  CAIRO_WIN32_STATIC_BUILD
   DISABLE_SOME_FLOATING_POINT
-  _UNICODE
-  UNICODE
 )
+
+if(WIN32)
+  set(compile_defs ${compile_defs}
+    WIN32
+    CAIRO_WIN32_STATIC_BUILD
+    _UNICODE
+    UNICODE
+  )
+endif()
+
+target_compile_definitions(openFrameworksLib PUBLIC ${compile_defs})
+
+if (APPLE)
+  set(lib_dir osx)
+elseif(WIN32)
+  set(lib_dir vs/x64)
+else()
+  message(FATAL_ERROR "Platform is not supported.")
+endif()
 
 set(OF_LIB_DIRS
-  ${OF_ROOT}/libs/glfw/lib/vs/x64
-  ${OF_ROOT}/libs/rtAudio/lib/vs/x64
-  ${OF_ROOT}/libs/FreeImage/lib/vs/x64
-  ${OF_ROOT}/libs/freetype/lib/vs/x64
-  ${OF_ROOT}/libs/fmodex/lib/vs/x64
-  ${OF_ROOT}/libs/videoInput/lib/vs/x64
-  ${OF_ROOT}/libs/cairo/lib/vs/x64
-  ${OF_ROOT}/libs/glew/lib/vs/x64
-  ${OF_ROOT}/libs/glu/lib/vs/x64
-  ${OF_ROOT}/libs/openssl/lib/vs/x64
-  ${OF_ROOT}/libs/curl/lib/vs/x64
-  ${OF_ROOT}/libs/tess2/lib/vs/x64
-  ${OF_ROOT}/libs/boost/lib/vs/x64
-  ${OF_ROOT}/libs/uriparser/lib/vs/x64
-  ${OF_ROOT}/libs/pugixml/lib/vs/x64
+  ${OF_ROOT}/libs/glfw/lib/${lib_dir}
+  ${OF_ROOT}/libs/rtAudio/lib/${lib_dir}
+  ${OF_ROOT}/libs/FreeImage/lib/${lib_dir}
+  ${OF_ROOT}/libs/freetype/lib/${lib_dir}
+  ${OF_ROOT}/libs/fmodex/lib/${lib_dir}
+  ${OF_ROOT}/libs/videoInput/lib/${lib_dir}
+  ${OF_ROOT}/libs/cairo/lib/${lib_dir}
+  ${OF_ROOT}/libs/glew/lib/${lib_dir}
+  ${OF_ROOT}/libs/glu/lib/${lib_dir}
+  ${OF_ROOT}/libs/openssl/lib/${lib_dir}
+  ${OF_ROOT}/libs/curl/lib/${lib_dir}
+  ${OF_ROOT}/libs/tess2/lib/${lib_dir}
+  ${OF_ROOT}/libs/boost/lib/${lib_dir}
+  ${OF_ROOT}/libs/uriparser/lib/${lib_dir}
+  ${OF_ROOT}/libs/pugixml/lib/${lib_dir}
 )
 
+if (APPLE)
+  set(OF_STATIC_LIBS
+    "${OF_ROOT}/libs/boost/lib/osx/boost_filesystem.a"
+    "${OF_ROOT}/libs/boost/lib/osx/boost_system.a"
+    "${OF_ROOT}/libs/cairo/lib/osx/cairo-script-interpreter.a"
+    "${OF_ROOT}/libs/cairo/lib/osx/cairo.a"
+    "${OF_ROOT}/libs/cairo/lib/osx/pixman-1.a"
+    "${OF_ROOT}/libs/curl/lib/osx/curl.a"
+    "${OF_ROOT}/libs/fmodex/lib/osx/libfmodex.dylib"
+    "${OF_ROOT}/libs/FreeImage/lib/osx/freeimage.a"
+    "${OF_ROOT}/libs/freetype/lib/osx/freetype.a"
+    "${OF_ROOT}/libs/glew/lib/osx/glew.a"
+    "${OF_ROOT}/libs/glfw/lib/osx/glfw3.a"
+    "${OF_ROOT}/libs/pugixml/lib/osx/pugixml.a"
+    "${OF_ROOT}/libs/rtAudio/lib/osx/rtAudio.a"
+    "${OF_ROOT}/libs/tess2/lib/osx/tess2.a"
+    "${OF_ROOT}/libs/uriparser/lib/osx/uriparser.a"
+  )
+  set(osxframeworks )
+  target_link_libraries(openFrameworksLib
+    general "-framework Accelerate"
+    general "-framework AGL"
+    general "-framework AppKit"
+    general "-framework ApplicationServices"
+    general "-framework AudioToolbox"
+    general "-framework AVFoundation"
+    general "-framework Cocoa"
+    general "-framework CoreAudio"
+    general "-framework CoreFoundation"
+    general "-framework CoreMedia"
+    general "-framework CoreServices"
+    general "-framework CoreVideo"
+    general "-framework IOKit"
+    general "-framework OpenGL"
+    general "-framework QuartzCore"
+    general "-framework QTKit"
+    general "-framework Security"
+    general "-framework LDAP"
+  )
+  target_link_libraries(openFrameworksLib general ${OF_STATIC_LIBS})
+elseif(WIN32)
+  target_link_directories(openFrameworksLib PUBLIC ${OF_LIB_DIRS})
+  set(OF_STATIC_LIBS
+    cairo-static.lib
+    pixman-1.lib
+    libpng.lib
+    zlib.lib
+    msimg32.lib
+    OpenGL32.lib
+    kernel32.lib
+    setupapi.lib
+    Vfw32.lib
+    comctl32.lib
+    rtAudioD.lib
+    videoInputD.lib
+    libfreetype.lib
+    FreeImage.lib
+    dsound.lib
+    user32.lib
+    gdi32.lib
+    winspool.lib
+    comdlg32.lib
+    advapi32.lib
+    shell32.lib
+    ole32.lib
+    oleaut32.lib
+    uuid.lib
+    glew32s.lib
+    fmodex64_vc.lib
+    libssl.lib
+    libcrypto.lib
+    crypt32.lib
+    libcurl.lib
+    uriparser.lib
+    Ws2_32.lib
+    tess2.lib
+    glfw3.lib
+    winmm.lib
+    odbc32.lib
+    odbccp32.lib
+    wldap32.lib
+  )
+  target_link_libraries(openFrameworksLib 
+    debug pugixmld.lib ${OF_STATIC_LIBS}
+    optimized pugixml.lib ${OF_STATIC_LIBS}
+  )
+endif()
 
-target_link_directories(openFrameworksLib PUBLIC ${OF_LIB_DIRS})
-
-set(OF_STATIC_LIBS
-  cairo-static.lib
-  pixman-1.lib
-  libpng.lib
-  zlib.lib
-  msimg32.lib
-  OpenGL32.lib
-  kernel32.lib
-  setupapi.lib
-  Vfw32.lib
-  comctl32.lib
-  rtAudioD.lib
-  videoInputD.lib
-  libfreetype.lib
-  FreeImage.lib
-  dsound.lib
-  user32.lib
-  gdi32.lib
-  winspool.lib
-  comdlg32.lib
-  advapi32.lib
-  shell32.lib
-  ole32.lib
-  oleaut32.lib
-  uuid.lib
-  glew32s.lib
-  fmodex64_vc.lib
-  libssl.lib
-  libcrypto.lib
-  crypt32.lib
-  libcurl.lib
-  uriparser.lib
-  Ws2_32.lib
-  tess2.lib
-  glfw3.lib
-  winmm.lib
-  odbc32.lib
-  odbccp32.lib
-  wldap32.lib
-)
-
-target_link_libraries(openFrameworksLib 
-  debug pugixmld.lib ${OF_STATIC_LIBS}
-  optimized pugixml.lib ${OF_STATIC_LIBS}
-)
-
-set(OF_LIB_DIRS_PARENT ${OF_LIB_DIRS} PARENT_SCOPE)
+if (has_parent_scope)
+  set(OF_LIB_DIRS_PARENT ${OF_LIB_DIRS} PARENT_SCOPE)
+else()
+  set(OF_LIB_DIRS_PARENT ${OF_LIB_DIRS})
+endif()
 
 include(cmake/helpers.cmake)
 macro (copy_of_dlls target)
   foreach(libdir ${OF_LIB_DIRS_PARENT})
-    install_dlls(${target} ${libdir} dll)
+    if(WIN32)
+      set(dll_ext dll)
+    elseif(APPLE)
+      set(dll_ext dylib)
+    endif()
+    install_dlls(${target} ${libdir} ${dll_ext})
   endforeach()
 endmacro()
