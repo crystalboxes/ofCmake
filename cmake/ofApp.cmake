@@ -59,16 +59,29 @@ function(ofApp APP_PATH) # addons
   foreach(addon ${addons})
     ofAddon(${app_name} ${addon})
   endforeach()
-  set_target_properties(${app_name}
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${APP_DIR}/bin"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${APP_DIR}/bin"
-  )
+  if (APPLE)
+    # TODO package app properly
+    set(TARGET_DEBUG_NAME ${app_name}Debug)
+    set_target_properties(${app_name}
+      PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY_DEBUG "${APP_DIR}/bin/${TARGET_DEBUG_NAME}.app/Contents/MacOS"
+      RUNTIME_OUTPUT_DIRECTORY_RELEASE "${APP_DIR}/bin/${app_name}.app/Contents/MacOS"
+    )
+  else()
+    set(TARGET_DEBUG_NAME ${app_name}_debug)
+    set(TARGET_OUT_DIR "${APP_DIR}/bin")
+    set_target_properties(${app_name}
+      PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY_DEBUG "${TARGET_OUT_DIR}"
+      RUNTIME_OUTPUT_DIRECTORY_RELEASE "${TARGET_OUT_DIR}"
+    )
+  endif()
+
   copy_of_dlls(${app_name})
 
   target_link_libraries(${app_name} general openFrameworksLib)
   target_include_directories(${app_name} PUBLIC ${APP_DIR}/src)
-  set_target_properties(${app_name} PROPERTIES OUTPUT_NAME_DEBUG ${app_name}_debug)
+  set_target_properties(${app_name} PROPERTIES OUTPUT_NAME_DEBUG ${TARGET_DEBUG_NAME})
 
   if (WIN32)
     set_target_properties(${app_name} PROPERTIES LINK_FLAGS "/ignore:4099")
